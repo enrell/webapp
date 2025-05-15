@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Simple PWA App</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="./favicon.ico">
+  <meta name="theme-color" content="#1976d2">
+</head>
+<body>
+  <h1>Hello world!</h1>
+  <p>This is a simple PWA application.</p>
+  <button id="notify">Click to receive a notification</button>
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function() {
+        navigator.serviceWorker.register('./service-worker.js').then(registration => {
+          setInterval(() => {
+            registration.update();
+            console.log('Verifying service worker update...');
+          }, 10 * 60 * 10);
+          
+          let refreshing = false;
+          navigator.serviceWorker.addEventListener('controllerchange', () => {
+            if (!refreshing) {
+              refreshing = true;
+              window.location.reload();
+            }
+          });
+        });
+      });
+    }
+
+    document.getElementById('notify').onclick = async function() {
+      if (Notification.permission !== 'granted') {
+        await Notification.requestPermission();
+      }
+      if (navigator.serviceWorker.controller) {
+        navigator.serviceWorker.controller.postMessage({action: 'push-test'});
+      } else {
+        new Notification('Notification!', { body: 'This is a local notification.' });
+      }
+    };
+  </script>
+</body>
+</html>
